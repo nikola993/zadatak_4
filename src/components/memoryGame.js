@@ -9,6 +9,7 @@ class memoryGame extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
+            // create new board with shuffled values
             boardElementsValue: this.shuffledElements(),
         };
         this.onFieldClick = this.onFieldClick.bind(this);
@@ -19,6 +20,7 @@ class memoryGame extends Component {
         const gameState = store.getState();
         const { actions } = this.props;
         const elementSelected = event.target;
+        // disable selected element
         elementSelected.classList.add('disabled');
         actions.selectField(gameState, elementSelected);
         this.handleChange();
@@ -27,16 +29,20 @@ class memoryGame extends Component {
     handleChange() {
         const gameState = store.getState();
         const { actions } = this.props;
+        // if there are 2 element in state List check if equal
         if (gameState.memoryGame.size === 2) {
+            // get elements from List
             const firstElement = gameState.memoryGame.first();
             const secondElement = gameState.memoryGame.last();
             if (firstElement.dataset.value === secondElement.dataset.value) {
                 actions.isEqual();
             } else {
+                // if elements are not equal get all elements and disable them
                 const list = document.getElementsByClassName('fields');
                 for (let i = 0; i < list.length; i += 1) {
                     list[i].classList.add('disabledAll');
                 }
+                // after 1 sec make them clickable
                 setTimeout(() => {
                     for (let i = 0; i < list.length; i += 1) {
                         list[i].classList.remove('disabledAll');
@@ -49,6 +55,7 @@ class memoryGame extends Component {
         }
     }
 
+    // get array of elements and shuffle them for board state
     shuffledElements() {
         const gameElements = [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8];
         let currentIndex = gameElements.length;
@@ -69,6 +76,7 @@ class memoryGame extends Component {
         return gameElements;
     }
 
+    // create a board with shuffled elements
     createBoard() {
         const { boardElementsValue } = this.state;
         const gameElements = boardElementsValue;
@@ -90,11 +98,7 @@ class memoryGame extends Component {
     }
 }
 memoryGame.propTypes = {
-    actions: PropTypes.shape({
-        type: PropTypes.string,
-        gameState: PropTypes.object,
-        elementSelected: PropTypes.node,
-    }).isRequired,
+    actions: PropTypes.shape({}).isRequired,
 };
 
 function mapStateToProps(state) {

@@ -1,6 +1,8 @@
-import { createStore } from 'redux';
-import devToolsEnhancer from 'remote-redux-devtools';
+import { createStore, applyMiddleware } from 'redux';
+import { createLogger } from 'redux-logger';
 import combineReducers from '../reducers/index';
 
-const store = createStore(combineReducers, devToolsEnhancer({ realtime: true }));
+const logger = createLogger();
+
+const store = createStore(combineReducers, applyMiddleware(logger));
 export default store;
