@@ -1,9 +1,8 @@
 import types from './action_type';
 
-export function selectField(gameState, elementSelected) {
+export function selectField(elementSelected) {
     return {
         type: types.SELECT_FIELD,
-        gameState,
         elementSelected,
     };
 }

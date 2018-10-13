@@ -3,39 +3,36 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
 import * as gameActions from '../actions/index';
-import store from '../store/configureStore';
+
+import Timer from './timer';
 
 class memoryGame extends Component {
-    constructor(props, context) {
-        super(props, context);
+    constructor(props) {
+        super(props);
         this.state = {
             // create new board with shuffled values
             boardElementsValue: this.shuffledElements(),
+            numberOfRightGuesses: 0,
+            startTimer: false,
         };
         this.onFieldClick = this.onFieldClick.bind(this);
-        this.handleChange = this.handleChange.bind(this);
     }
 
-    onFieldClick(event) {
-        const gameState = store.getState();
+    componentDidUpdate() {
+        const { gameState } = this.props;
         const { actions } = this.props;
-        const elementSelected = event.target;
-        // disable selected element
-        elementSelected.classList.add('disabled');
-        actions.selectField(gameState, elementSelected);
-        this.handleChange();
-    }
-
-    handleChange() {
-        const gameState = store.getState();
-        const { actions } = this.props;
+        const { numberOfRightGuesses } = this.state;
         // if there are 2 element in state List check if equal
-        if (gameState.memoryGame.size === 2) {
+        if (gameState.size === 2) {
             // get elements from List
-            const firstElement = gameState.memoryGame.first();
-            const secondElement = gameState.memoryGame.last();
+            const firstElement = gameState.first();
+            const secondElement = gameState.last();
             if (firstElement.dataset.value === secondElement.dataset.value) {
+                this.state.numberOfRightGuesses += 1;
                 actions.isEqual();
+                if (numberOfRightGuesses === 7) {
+                    this.state.startTimer = false;
+                }
             } else {
                 // if elements are not equal get all elements and disable them
                 const list = document.getElementsByClassName('fields');
@@ -53,6 +50,15 @@ class memoryGame extends Component {
                 actions.notEqual();
             }
         }
+    }
+
+    onFieldClick(event) {
+        this.state.startTimer = true;
+        const { actions } = this.props;
+        const elementSelected = event.target;
+        // disable selected element
+        elementSelected.classList.add('disabled');
+        actions.selectField(elementSelected);
     }
 
     // get array of elements and shuffle them for board state
@@ -79,6 +85,7 @@ class memoryGame extends Component {
     // create a board with shuffled elements
     createBoard() {
         const { boardElementsValue } = this.state;
+        const { startTimer } = this.state;
         const gameElements = boardElementsValue;
         const element = gameElements.map((elemet, index) => (
             <div className="fields" key={index.toString()} data-value={elemet} role="button" tabIndex={0}>
@@ -87,6 +94,10 @@ class memoryGame extends Component {
         return (
             <div id="gameBoard" onClick={this.onFieldClick} aria-hidden="true">
                 { element }
+                <div>
+                    <div><strong>Time: </strong></div>
+                    <Timer startTimer={startTimer} />
+                </div>
             </div>
         );
     }
@@ -97,13 +108,20 @@ class memoryGame extends Component {
         );
     }
 }
+
 memoryGame.propTypes = {
     actions: PropTypes.shape({}).isRequired,
+    gameState: PropTypes.shape({}),
+};
+
+memoryGame.defaultProps = {
+    gameState: undefined,
 };
 
 function mapStateToProps(state) {
+    const { memoryGame: gameState } = state;
     return {
-        elementSelected: state.memoryGame,
+        gameState,
     };
 }
 

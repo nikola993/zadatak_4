@@ -4,8 +4,7 @@ import types from '../actions/action_type';
 export default function memoryGame(state = List(), action) {
     switch (action.type) {
     case types.SELECT_FIELD: {
-        const newState = action.elementSelected;
-        return state.push(newState);
+        return state.push(action.elementSelected);
     }
     case types.IS_EQUAL: {
         const newState = List();
