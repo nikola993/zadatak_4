@@ -1,4 +1,10 @@
 import { combineReducers } from 'redux';
-import memoryGame from './memoryGame';
+import selectElement from './selectElement.reducer';
+import timerState from './timer.reducer';
+import elementDisable from './element.reducer';
 
-export default combineReducers({ memoryGame });
+export default combineReducers({
+    selectElement,
+    timerState,
+    elementDisable,
+});

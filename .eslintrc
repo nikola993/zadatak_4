@@ -18,7 +18,7 @@
       "error",
       4
     ],
-    "linebreak-style": ["error", "windows"],
+    "linebreak-style": "off",
     "jsx-a11y/anchor-is-valid": [ "error", {
       "components": [ "Link" ],
       "specialLink": [ "hrefLeft", "hrefRight" ],

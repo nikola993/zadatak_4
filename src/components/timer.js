@@ -1,26 +1,25 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-class Timer extends React.Component {
+export default class Timer extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             time: 0,
         };
-
         this.startTimer = this.startTimer.bind(this);
         this.stopTimer = this.stopTimer.bind(this);
         this.resetTimer = this.resetTimer.bind(this);
     }
 
-    componentDidUpdate(startTimerProp) {
-        const { startTimer } = this.props;
-        if (startTimer !== startTimerProp.startTimer) {
-            if (startTimer === true) {
+    componentDidUpdate(prevPorps) {
+        const { timerState } = this.props;
+        if (timerState !== prevPorps.timerState) {
+            if (timerState === true) {
                 this.startTimer();
+            } else {
+                this.stopTimer();
             }
-        } else if (startTimer === false) {
-            this.stopTimer();
         }
     }
 
@@ -52,7 +51,5 @@ class Timer extends React.Component {
 }
 
 Timer.propTypes = {
-    startTimer: PropTypes.bool.isRequired,
+    timerState: PropTypes.bool.isRequired,
 };
-
-export default Timer;

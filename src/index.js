@@ -9,5 +9,5 @@ render(
     <Provider store={store}>
         <MemoryGame />
     </Provider>,
-    document.getElementById('app')
+    document.getElementById('root')
 );

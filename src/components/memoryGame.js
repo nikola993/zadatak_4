@@ -2,63 +2,74 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
-import * as gameActions from '../actions/index';
 
+import SelectedElements from '../actions/selectElement.actions';
+import TimerActions from '../actions/timer.actions';
+import ElementActions from '../actions/element.actions';
+
+import GameElement from './element';
 import Timer from './timer';
 
-class memoryGame extends Component {
+class MemoryGame extends Component {
     constructor(props) {
         super(props);
         this.state = {
             // create new board with shuffled values
             boardElementsValue: this.shuffledElements(),
-            numberOfRightGuesses: 0,
-            startTimer: false,
+            guessedElements: [],
         };
-        this.onFieldClick = this.onFieldClick.bind(this);
+        this.selectedElement = this.selectedElement.bind(this);
     }
 
     componentDidUpdate() {
-        const { gameState } = this.props;
-        const { actions } = this.props;
-        const { numberOfRightGuesses } = this.state;
-        // if there are 2 element in state List check if equal
-        if (gameState.size === 2) {
-            // get elements from List
-            const firstElement = gameState.first();
-            const secondElement = gameState.last();
-            if (firstElement.dataset.value === secondElement.dataset.value) {
-                this.state.numberOfRightGuesses += 1;
-                actions.isEqual();
-                if (numberOfRightGuesses === 7) {
-                    this.state.startTimer = false;
+        const { selectElement } = this.props;
+        const { selectElementsAction } = this.props;
+        const { timerActions } = this.props;
+        const { elementActions } = this.props;
+        const { guessedElements } = this.state;
+
+        if (selectElement.size === 2) {
+            const firstElement = selectElement.get(0);
+            const secondElement = selectElement.get(1);
+            if (firstElement.value === secondElement.value) {
+                guessedElements.push(firstElement.activeIndex);
+                guessedElements.push(secondElement.activeIndex);
+                selectElementsAction.elementsCompared();
+                if (guessedElements.length === 16) {
+                    timerActions.stop();
                 }
             } else {
-                // if elements are not equal get all elements and disable them
-                const list = document.getElementsByClassName('fields');
-                for (let i = 0; i < list.length; i += 1) {
-                    list[i].classList.add('disabledAll');
-                }
-                // after 1 sec make them clickable
+                elementActions.disableElement();
                 setTimeout(() => {
-                    for (let i = 0; i < list.length; i += 1) {
-                        list[i].classList.remove('disabledAll');
-                    }
-                    firstElement.classList.remove('disabled');
-                    secondElement.classList.remove('disabled');
+                    selectElementsAction.elementsCompared();
+                    elementActions.enableElement();
                 }, 1000);
-                actions.notEqual();
             }
         }
     }
 
-    onFieldClick(event) {
-        this.state.startTimer = true;
-        const { actions } = this.props;
-        const elementSelected = event.target;
-        // disable selected element
-        elementSelected.classList.add('disabled');
-        actions.selectField(elementSelected);
+    selectedElement(index) {
+        const { selectElement } = this.props;
+        if (selectElement.size === 2) {
+            const firstElement = selectElement.get(0);
+            const secondElement = selectElement.get(1);
+            if (firstElement.activeIndex === index || secondElement.activeIndex === index) {
+                return true;
+            }
+        } else if (selectElement.size === 1) {
+            const firstElement = selectElement.first();
+            if (firstElement.activeIndex === index) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    handleClick(index, value) {
+        const { timerActions } = this.props;
+        timerActions.start();
+        const { selectElementsAction } = this.props;
+        selectElementsAction.selectField(index, value);
     }
 
     // get array of elements and shuffle them for board state
@@ -82,54 +93,71 @@ class memoryGame extends Component {
         return gameElements;
     }
 
-    // create a board with shuffled elements
-    createBoard() {
+    render() {
         const { boardElementsValue } = this.state;
-        const { startTimer } = this.state;
-        const gameElements = boardElementsValue;
-        const element = gameElements.map((elemet, index) => (
-            <div className="fields" key={index.toString()} data-value={elemet} role="button" tabIndex={0}>
-                {elemet}
-            </div>));
+        const { guessedElements } = this.state;
+        const { timerState } = this.props;
+        const { elementDisable } = this.props;
         return (
-            <div id="gameBoard" onClick={this.onFieldClick} aria-hidden="true">
-                { element }
-                <div>
+            <div>
+                <div id="gameBoard">
+                    <div>
+                        { boardElementsValue.map((element, index) => (
+                            <GameElement
+                                key={index.toString()}
+                                index={index}
+                                value={element}
+                                onClick={() => this.handleClick(index, element)}
+                                isActive={this.selectedElement(index)}
+                                elementGuessed={guessedElements}
+                                elementDisable={elementDisable}
+                            />
+                        ))
+                        }
+                    </div>
+                </div>
+                <div className="center">
                     <div><strong>Time: </strong></div>
-                    <Timer startTimer={startTimer} />
+                    <Timer
+                        timerState={timerState}
+                    />
                 </div>
             </div>
         );
     }
-
-    render() {
-        return (
-            this.createBoard()
-        );
-    }
 }
 
-memoryGame.propTypes = {
-    actions: PropTypes.shape({}).isRequired,
-    gameState: PropTypes.shape({}),
+MemoryGame.propTypes = {
+    selectElementsAction: PropTypes.shape({}).isRequired,
+    selectElement: PropTypes.shape({}),
+    timerActions: PropTypes.shape({}).isRequired,
+    timerState: PropTypes.bool.isRequired,
+    elementActions: PropTypes.shape({}).isRequired,
+    elementDisable: PropTypes.bool.isRequired,
 };
 
-memoryGame.defaultProps = {
-    gameState: undefined,
+MemoryGame.defaultProps = {
+    selectElement: undefined,
 };
 
 function mapStateToProps(state) {
-    const { memoryGame: gameState } = state;
+    const { selectElement } = state;
+    const { timerState } = state;
+    const { elementDisable } = state;
     return {
-        gameState,
+        selectElement,
+        timerState,
+        elementDisable,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        actions: bindActionCreators(gameActions, dispatch),
+        selectElementsAction: bindActionCreators(SelectedElements, dispatch),
+        timerActions: bindActionCreators(TimerActions, dispatch),
+        elementActions: bindActionCreators(ElementActions, dispatch),
     };
 }
 
-const game = connect(mapStateToProps, mapDispatchToProps)(memoryGame);
+const game = connect(mapStateToProps, mapDispatchToProps)(MemoryGame);
 export default game;
